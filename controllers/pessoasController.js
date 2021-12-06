@@ -3,20 +3,20 @@ const db = require("../db")
 async function buscarPessoas(req, res) {
     const conn = await db.connect()
     const id = req.query.id
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
 
     try {
         // Pesquisando UM registro
         if(req.query.id) {
             const [rows] = await conn.query(`
                 SELECT 
-                    id 'id', nome 'name', cnpj_cpf 'cnpjCpf', insc_est 'inscEst', 
-                    logradouro 'street', numero 'number', bairro 'district', cidade 'city', estado 'state'
+                    id 'id', nome 'nome', cnpj_cpf 'cnpjCpf', insc_est 'ie', 
+                    logradouro 'logradouro', numero 'numero', bairro 'bairro', cidade 'cidade', estado 'estado'
                 FROM 
                     tbpessoas
                 WHERE id = ?
                 AND id_usuario = ?
-            `, [id, id_usuario])
+            `, [id, idUsuario])
 
             res.send(rows[0])
 
@@ -25,12 +25,12 @@ async function buscarPessoas(req, res) {
 
             const [rows] = await conn.query(`
                 SELECT 
-                    id 'id', nome 'name', cnpj_cpf 'cnpjCpf', insc_est 'inscEst', 
-                    logradouro 'street', numero 'number', bairro 'district', cidade 'city', estado 'state'
+                    id 'id', nome 'nome', cnpj_cpf 'cnpjCpf', insc_est 'ie', 
+                    logradouro 'logradouro', numero 'numero', bairro 'bairro', cidade 'cidade', estado 'estado'
                 FROM 
                     tbpessoas
                 WHERE id_usuario = ?
-            `, id_usuario)
+            `, [idUsuario])
 
             res.send(rows)
         }
@@ -43,6 +43,7 @@ async function buscarPessoas(req, res) {
 
 async function incluirPessoa(req, res) {
     const conn = await db.connect()
+    const idUsuario = req.query.idUsuario
     const pessoa = req.body
     
     try {
@@ -51,8 +52,8 @@ async function incluirPessoa(req, res) {
                 (nome, cnpj_cpf, id_usuario, insc_est, logradouro, numero, bairro, cidade, estado)
             VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, [pessoa.name, pessoa.cnpjCpf, pessoa.id_usuario, pessoa.inscEst, 
-                pessoa.street, pessoa.number, pessoa.district, pessoa.city, pessoa.state])
+            `, [pessoa.nome, pessoa.cnpjCpf, idUsuario, pessoa.ie, 
+                pessoa.logradouro, pessoa.numero, pessoa.bairro, pessoa.cidade, pessoa.estado])
 
         res.json("ok")
 
@@ -64,6 +65,7 @@ async function incluirPessoa(req, res) {
 async function editarPessoa(req, res) {
     const conn = await db.connect()
     const pessoa = req.body
+    const idUsuario = req.query.idUsuario
     const id = req.query.id
 
     try {
@@ -79,8 +81,8 @@ async function editarPessoa(req, res) {
                 estado = ?
             WHERE id = ?
             AND id_usuario = ?
-        `, [pessoa.name, pessoa.cnpjCpf, pessoa.inscEst, pessoa.street, pessoa.number, pessoa.district, pessoa.city, pessoa.state,
-            id, pessoa.id_usuario])
+        `, [pessoa.nome, pessoa.cnpjCpf, pessoa.ie, pessoa.logradouro, pessoa.numero, pessoa.bairro, pessoa.cidade, pessoa.estado,
+            id, idUsuario])
         
         res.json("ok")
 
@@ -92,8 +94,8 @@ async function editarPessoa(req, res) {
 
 async function excluirPessoa(req, res) {
     const conn = await db.connect()
+    const idUsuario = req.query.idUsuario
     const id = req.query.id
-    const id_usuario = req.query.id_usuario
 
     try {
         if(req.query.id) {
@@ -101,7 +103,7 @@ async function excluirPessoa(req, res) {
                 DELETE FROM tbpessoas
                 WHERE id = ?
                 AND id_usuario = ?
-            `, [id, id_usuario])
+            `, [id, idUsuario])
         }
 
         res.json("ok")

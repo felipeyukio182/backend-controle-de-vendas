@@ -1,20 +1,22 @@
 const db = require("../db")
 
-async function buscarTodasVendas(req, res) {
+async function buscarVendas(req, res) {
     const conn = await db.connect()
 
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
 
-    const dataInicialMs = Number.parseInt(req.query.dataInicial)
-    const dataFinalMs = Number.parseInt(req.query.dataFinal)
+    const dataInicial = req.query.dataInicial
+    const dataFinal = req.query.dataFinal
+    // const dataInicialMs = Number.parseInt(req.query.dataInicial)
+    // const dataFinalMs = Number.parseInt(req.query.dataFinal)
     
-    const dataInicial = (new Date(dataInicialMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
-    const dataFinal = (new Date(dataFinalMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
+    // const dataInicial = (new Date(dataInicialMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
+    // const dataFinal = (new Date(dataFinalMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
 
-    console.log(dataInicialMs)
-    console.log(dataFinalMs)
-    console.log(dataInicial)
-    console.log(dataFinal)
+    // console.log(dataInicialMs)
+    // console.log(dataFinalMs)
+    // console.log(dataInicial)
+    // console.log(dataFinal)
 
 
     try {
@@ -22,8 +24,9 @@ async function buscarTodasVendas(req, res) {
         const vendas = await conn.query(`
         SELECT 
             a.id 'id',
-            a.data_venda 'date',
-            c.nome 'client',
+            a.data_venda 'data',
+            c.nome 'cliente',
+            c.id 'idCliente',
             sum(d.valor * d.quantidade) 'total'
         FROM 
             tbvendas a,
@@ -41,7 +44,7 @@ async function buscarTodasVendas(req, res) {
         GROUP BY a.id
         ORDER BY a.data_venda DESC
         ;
-        `, [id_usuario, dataInicial, dataFinal])
+        `, [idUsuario, dataInicial, dataFinal])
 
         // console.log(vendas[0])
         res.json(vendas[0])
@@ -52,21 +55,20 @@ async function buscarTodasVendas(req, res) {
 
 }
 
-async function buscarVenda(req, res) {
+async function buscarProdutosVenda(req, res) {
     const conn = await db.connect()
 
     const id = req.query.idVenda
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
 
     try {
         const venda = await conn.query(`       
             SELECT 
-                d.id 'id',
                 a.id 'idVenda',
                 a.data_venda 'data',
-                c.id 'clientId',
+                c.id 'idCliente',
                 c.nome 'cliente',
-                b.id 'productId',
+                b.id 'idProduto',
                 b.nome 'produto',
                 d.quantidade 'quantidade',
                 d.valor 'preco'
@@ -83,7 +85,7 @@ async function buscarVenda(req, res) {
             AND a.id = d.id_venda
             AND b.id = d.id_produto
             ;
-        `, [id, id_usuario])
+        `, [id, idUsuario])
 
 
         res.json(venda[0])
@@ -93,18 +95,18 @@ async function buscarVenda(req, res) {
     }
 }
 
-async function incluirVenda(req, res) {
+async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ PRA BAIXO
     const conn = await db.connect()
 
-    const id_usuario = req.body.id_usuario
-    const client = req.body.client
-    const orderProducts = req.body.orderProducts
+    const idUsuario = req.body.idUsuario
+    const cliente = req.body.cliente
+    const produtos = req.body.orderProducts
 
     try {
         await conn.query(`
             INSERT INTO tbvendas(id_pessoa, data_venda, id_usuario)
             VALUES(?, sysdate(), ?);
-        `, [client.id, id_usuario])
+        `, [cliente.id, idUsuario])
 
 
         for(let p of orderProducts) {
@@ -124,7 +126,7 @@ async function incluirVenda(req, res) {
                     ?,
                     ?
                 );
-            `, [p.product.id, p.amount, p.product.price])
+            `, [produtos.product.id, produtos.amount, produtos.product.price])
         }
 
         res.json("ok")
@@ -137,7 +139,7 @@ async function incluirVenda(req, res) {
 async function editarVenda(req, res) {
     const conn = await db.connect()
 
-    const id_usuario = req.body.id_usuario
+    const idUsuario = req.body.idUsuario
     const client = req.body.client
     const orderProducts = req.body.orderProducts
 
@@ -149,7 +151,7 @@ async function editarVenda(req, res) {
             SET id_pessoa = ?
             WHERE id = ?
             AND id_usuario = ?;
-        `, [client.id, id, id_usuario])
+        `, [client.id, id, idUsuario])
 
         await conn.query(`
             DELETE from tb_produto_venda
@@ -182,7 +184,7 @@ async function editarVenda(req, res) {
 async function deletarVenda(req, res) {
     const conn = await db.connect()
 
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
     const id = req.query.id
 
     try {
@@ -197,7 +199,7 @@ async function deletarVenda(req, res) {
             DELETE FROM tbvendas
             WHERE id = ?
             AND id_usuario = ?;
-        `, [id, id_usuario])
+        `, [id, idUsuario])
 
         
     } catch(error) {
@@ -206,8 +208,9 @@ async function deletarVenda(req, res) {
 }
 
 module.exports = {
-    buscarTodasVendas,
-    buscarVenda,
+    // buscarTodasVendas,
+    buscarVendas,
+    buscarProdutosVenda,
     incluirVenda,
     editarVenda,
     deletarVenda

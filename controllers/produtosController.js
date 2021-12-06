@@ -3,18 +3,18 @@ const db = require("../db")
 async function buscarProdutos(req, res) {
     const conn = await db.connect()
     const id = req.query.id
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
 
     try {
         if(req.query.id) {
             const [rows] = await conn.query(`
                 SELECT 
-                    id 'id', nome 'name', preco 'price'
+                    id 'id', nome 'nome', preco 'preco'
                 FROM 
                     tbprodutos
                 WHERE id = ?
                 AND id_usuario = ?
-            `, [id, id_usuario])
+            `, [id, idUsuario])
 
             res.send(rows[0])
 
@@ -22,10 +22,11 @@ async function buscarProdutos(req, res) {
 
             const [rows] = await conn.query(`
                 SELECT 
-                    id 'id', nome 'name', preco 'price'
+                    id 'id', nome 'nome', preco 'preco'
                 FROM 
                     tbprodutos
-            `)
+                WHERE id_usuario = ?
+            `, [idUsuario])
             res.send(rows)
         }
     
@@ -38,6 +39,7 @@ async function buscarProdutos(req, res) {
 async function incluirProduto(req, res) {
     const conn = await db.connect()
     const produto = req.body
+    const idUsuario = req.query.idUsuario
     
     try {
         await conn.query(`
@@ -45,7 +47,7 @@ async function incluirProduto(req, res) {
                 (nome, preco, id_usuario)
             VALUES
                 (?, ?, ?)
-            `, [produto.name, produto.price, produto.id_usuario])
+            `, [produto.nome, produto.preco, idUsuario])
 
         res.json("ok")
 
@@ -59,6 +61,7 @@ async function editarProduto(req, res) {
     const conn = await db.connect()
     const produto = req.body
     const id = req.query.id
+    const idUsuario = req.query.idUsuario
 
     try {
         await conn.query(`
@@ -67,7 +70,7 @@ async function editarProduto(req, res) {
                 preco = ?
             WHERE id = ?
             AND id_usuario = ?
-        `, [produto.name, produto.price, id, produto.id_usuario])
+        `, [produto.nome, produto.preco, id, idUsuario])
         
         res.json("ok")
 
@@ -80,7 +83,7 @@ async function editarProduto(req, res) {
 async function excluirProduto(req, res) {
     const conn = await db.connect()
     const id = req.query.id
-    const id_usuario = req.query.id_usuario
+    const idUsuario = req.query.idUsuario
 
     try {
         if(req.query.id) {
@@ -88,7 +91,7 @@ async function excluirProduto(req, res) {
                 DELETE FROM tbprodutos
                 WHERE id = ?
                 AND id_usuario = ?
-            `, [id, id_usuario])
+            `, [id, idUsuario])
         }
 
         res.json("ok")
