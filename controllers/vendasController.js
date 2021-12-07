@@ -7,17 +7,6 @@ async function buscarVendas(req, res) {
 
     const dataInicial = req.query.dataInicial
     const dataFinal = req.query.dataFinal
-    // const dataInicialMs = Number.parseInt(req.query.dataInicial)
-    // const dataFinalMs = Number.parseInt(req.query.dataFinal)
-    
-    // const dataInicial = (new Date(dataInicialMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
-    // const dataFinal = (new Date(dataFinalMs)).toLocaleString().replace(/(\d{2})\/(\d{2})\/(\d{4})\s(.*)/, "$3-$2-$1 $4")
-
-    // console.log(dataInicialMs)
-    // console.log(dataFinalMs)
-    // console.log(dataInicial)
-    // console.log(dataFinal)
-
 
     try {
         
@@ -46,7 +35,6 @@ async function buscarVendas(req, res) {
         ;
         `, [idUsuario, dataInicial, dataFinal])
 
-        // console.log(vendas[0])
         res.json(vendas[0])
 
     } catch(error) {
@@ -98,18 +86,19 @@ async function buscarProdutosVenda(req, res) {
 async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ PRA BAIXO
     const conn = await db.connect()
 
-    const idUsuario = req.body.idUsuario
-    const cliente = req.body.cliente
-    const produtos = req.body.orderProducts
+    const idUsuario = req.query.idUsuario
+    
+    const idCliente = req.body.idCliente
+    const produtos = req.body.produtos
 
     try {
         await conn.query(`
             INSERT INTO tbvendas(id_pessoa, data_venda, id_usuario)
             VALUES(?, sysdate(), ?);
-        `, [cliente.id, idUsuario])
+        `, [idCliente, idUsuario])
 
 
-        for(let p of orderProducts) {
+        for(let p of produtos) {
             await conn.query(`
                 INSERT INTO tb_produto_venda(
                     id_produto,
@@ -126,7 +115,7 @@ async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQ
                     ?,
                     ?
                 );
-            `, [produtos.product.id, produtos.amount, produtos.product.price])
+            `, [p.id, p.quantidade, p.preco])
         }
 
         res.json("ok")
@@ -139,11 +128,11 @@ async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQ
 async function editarVenda(req, res) {
     const conn = await db.connect()
 
-    const idUsuario = req.body.idUsuario
-    const client = req.body.client
-    const orderProducts = req.body.orderProducts
+    const idUsuario = req.query.idUsuario
+    const idCliente = req.body.idCliente
+    const produtos = req.body.produtos
 
-    const id = req.query.id
+    const id = req.query.idVenda
 
     try {
         await conn.query(`
@@ -151,14 +140,14 @@ async function editarVenda(req, res) {
             SET id_pessoa = ?
             WHERE id = ?
             AND id_usuario = ?;
-        `, [client.id, id, idUsuario])
+        `, [idCliente, id, idUsuario])
 
         await conn.query(`
             DELETE from tb_produto_venda
             WHERE id_venda = ?;
         `, [id])
 
-        for(let p of orderProducts) {
+        for(let p of produtos) {
             await conn.query(`
                 INSERT INTO tb_produto_venda(
                     id_produto,
@@ -171,7 +160,7 @@ async function editarVenda(req, res) {
                     ?,
                     ?
                 );
-            `, [p.product.id, id, p.amount, p.product.price])
+            `, [p.id, id, p.quantidade, p.preco])
         }
 
         res.json("ok")
@@ -185,7 +174,7 @@ async function deletarVenda(req, res) {
     const conn = await db.connect()
 
     const idUsuario = req.query.idUsuario
-    const id = req.query.id
+    const id = req.query.idVenda
 
     try {
         // Preciso deletar da tb_produto_venda primeiro, por causa da chave estrangeira

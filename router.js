@@ -29,4 +29,4 @@ router.delete('/vendas', vendasController.deletarVenda)
 // Login
 router.post('/usuarios', loginController.login)
 
-module.exports = router;
+module.exports = {router};

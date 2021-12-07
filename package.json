@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js --host 192.168.2.128",
-    "dev": "nodemon index.js --host 192.168.2.128"
+    "start": "node index.js --host 192.168.2.135",
+    "dev": "nodemon index.js --host 192.168.2.135"
   },
   "keywords": [],
   "author": "",
