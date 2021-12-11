@@ -35,6 +35,9 @@ async function buscarVendas(req, res) {
         ;
         `, [idUsuario, dataInicial, dataFinal])
 
+        for(let venda of vendas[0]) {
+            venda.dataFormatada = (new Date(venda.data)).toLocaleString()
+        }
         res.json(vendas[0])
 
     } catch(error) {
@@ -46,7 +49,7 @@ async function buscarVendas(req, res) {
 async function buscarProdutosVenda(req, res) {
     const conn = await db.connect()
 
-    const id = req.query.idVenda
+    const idVenda = req.query.idVenda
     const idUsuario = req.query.idUsuario
 
     try {
@@ -73,8 +76,7 @@ async function buscarProdutosVenda(req, res) {
             AND a.id = d.id_venda
             AND b.id = d.id_produto
             ;
-        `, [id, idUsuario])
-
+        `, [idVenda, idUsuario])
 
         res.json(venda[0])
 
@@ -83,7 +85,7 @@ async function buscarProdutosVenda(req, res) {
     }
 }
 
-async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ PRA BAIXO
+async function incluirVenda(req, res) {
     const conn = await db.connect()
 
     const idUsuario = req.query.idUsuario
@@ -92,6 +94,8 @@ async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQ
     const produtos = req.body.produtos
 
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             INSERT INTO tbvendas(id_pessoa, data_venda, id_usuario)
             VALUES(?, sysdate(), ?);
@@ -118,9 +122,12 @@ async function incluirVenda(req, res) { ///////////////PRECISO VER AQQQQQQQQQQQQ
             `, [p.id, p.quantidade, p.preco])
         }
 
+        await conn.commit()
+
         res.json("ok")
 
     } catch(error) {
+        await conn.rollback()
         res.status(500).send(error)
     }
 }
@@ -129,23 +136,25 @@ async function editarVenda(req, res) {
     const conn = await db.connect()
 
     const idUsuario = req.query.idUsuario
+    const idVenda = req.query.idVenda
+    
     const idCliente = req.body.idCliente
     const produtos = req.body.produtos
 
-    const id = req.query.idVenda
-
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             UPDATE tbvendas
             SET id_pessoa = ?
             WHERE id = ?
             AND id_usuario = ?;
-        `, [idCliente, id, idUsuario])
+        `, [idCliente, idVenda, idUsuario])
 
         await conn.query(`
             DELETE from tb_produto_venda
             WHERE id_venda = ?;
-        `, [id])
+        `, [idVenda])
 
         for(let p of produtos) {
             await conn.query(`
@@ -160,12 +169,16 @@ async function editarVenda(req, res) {
                     ?,
                     ?
                 );
-            `, [p.id, id, p.quantidade, p.preco])
+            `, [p.id, idVenda, p.quantidade, p.preco])
         }
+
+        await conn.commit()
 
         res.json("ok")
 
     } catch(error) {
+        await conn.rollback()
+        console.log(error)
         res.status(500).json(error)
     }
 }
@@ -174,24 +187,30 @@ async function deletarVenda(req, res) {
     const conn = await db.connect()
 
     const idUsuario = req.query.idUsuario
-    const id = req.query.idVenda
+    const idVenda = req.query.idVenda
 
     try {
+        await conn.beginTransaction()
+
         // Preciso deletar da tb_produto_venda primeiro, por causa da chave estrangeira
         await conn.query(`
             DELETE FROM tb_produto_venda
             WHERE id_venda = ?;
-        `, [id])
+        `, [idVenda])
 
         // Depois eu deleto na tbvendas
         await conn.query(`
             DELETE FROM tbvendas
             WHERE id = ?
             AND id_usuario = ?;
-        `, [id, idUsuario])
+        `, [idVenda, idUsuario])
 
+        await conn.commit()
+
+        res.json("ok")
         
     } catch(error) {
+        await conn.rollback()
         res.status(500).json(error)
     }
 }

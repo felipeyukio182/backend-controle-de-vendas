@@ -47,6 +47,8 @@ async function incluirPessoa(req, res) {
     const pessoa = req.body
     
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             INSERT INTO tbpessoas
                 (nome, cnpj_cpf, id_usuario, insc_est, logradouro, numero, bairro, cidade, estado)
@@ -55,9 +57,12 @@ async function incluirPessoa(req, res) {
             `, [pessoa.nome, pessoa.cnpjCpf, idUsuario, pessoa.ie, 
                 pessoa.logradouro, pessoa.numero, pessoa.bairro, pessoa.cidade, pessoa.estado])
 
+        await conn.commit()
+                
         res.json("ok")
 
     } catch (error) {
+        await conn.rollback()
         res.status(500).send(error)
     }
 }
@@ -69,6 +74,8 @@ async function editarPessoa(req, res) {
     const id = req.query.id
 
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             UPDATE tbpessoas
             SET nome = ?,
@@ -84,9 +91,13 @@ async function editarPessoa(req, res) {
         `, [pessoa.nome, pessoa.cnpjCpf, pessoa.ie, pessoa.logradouro, pessoa.numero, pessoa.bairro, pessoa.cidade, pessoa.estado,
             id, idUsuario])
         
+
+        await conn.commit()
+
         res.json("ok")
 
     } catch (error) {
+        await conn.rollback()
         res.status(500).send(error)
     }
 
@@ -98,18 +109,23 @@ async function excluirPessoa(req, res) {
     const id = req.query.id
 
     try {
+        await conn.beginTransaction()
+
         if(req.query.id) {
-            conn.query(`
+            await conn.query(`
                 DELETE FROM tbpessoas
                 WHERE id = ?
                 AND id_usuario = ?
             `, [id, idUsuario])
         }
 
+        await conn.commit()
+
         res.json("ok")
 
     } catch (error) {
-       res.status(500).send(error) 
+        await conn.rollback()
+        res.status(500).send(error) 
     }
 
 }

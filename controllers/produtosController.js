@@ -6,6 +6,7 @@ async function buscarProdutos(req, res) {
     const idUsuario = req.query.idUsuario
 
     try {
+
         if(req.query.id) {
             const [rows] = await conn.query(`
                 SELECT 
@@ -27,6 +28,7 @@ async function buscarProdutos(req, res) {
                     tbprodutos
                 WHERE id_usuario = ?
             `, [idUsuario])
+
             res.send(rows)
         }
     
@@ -42,6 +44,8 @@ async function incluirProduto(req, res) {
     const idUsuario = req.query.idUsuario
     
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             INSERT INTO tbprodutos
                 (nome, preco, id_usuario)
@@ -49,9 +53,12 @@ async function incluirProduto(req, res) {
                 (?, ?, ?)
             `, [produto.nome, produto.preco, idUsuario])
 
+        await conn.commit()
+
         res.json("ok")
 
     } catch (error) {
+        await conn.rollback()
         res.status(500).send(error)
     }
 
@@ -64,6 +71,8 @@ async function editarProduto(req, res) {
     const idUsuario = req.query.idUsuario
 
     try {
+        await conn.beginTransaction()
+
         await conn.query(`
             UPDATE tbprodutos
             SET nome = ?,
@@ -72,9 +81,13 @@ async function editarProduto(req, res) {
             AND id_usuario = ?
         `, [produto.nome, produto.preco, id, idUsuario])
         
+
+        await conn.commit()
+
         res.json("ok")
 
     } catch (error) {
+        await conn.rollback()
         res.status(500).send(error)
     }
 
@@ -86,18 +99,23 @@ async function excluirProduto(req, res) {
     const idUsuario = req.query.idUsuario
 
     try {
+        await conn.beginTransaction()
+
         if(req.query.id) {
-            conn.query(`
+            await conn.query(`
                 DELETE FROM tbprodutos
                 WHERE id = ?
                 AND id_usuario = ?
             `, [id, idUsuario])
         }
 
+        await conn.commit()
+
         res.json("ok")
 
     } catch (error) {
-       res.status(500).send(error) 
+        await conn.rollback()
+        res.status(500).send(error) 
     }
 
 }
