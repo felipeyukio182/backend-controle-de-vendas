@@ -15,6 +15,7 @@ async function buscarVendas(req, res) {
             a.id 'id',
             a.data_venda 'data',
             c.nome 'cliente',
+            c.cnpj_cpf 'cnpjCpf',
             c.id 'idCliente',
             sum(d.valor * d.quantidade) 'total'
         FROM 
