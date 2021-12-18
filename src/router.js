@@ -24,7 +24,7 @@ router.get('/vendas', vendasController.buscarVendas)
 router.get('/produtosVenda', vendasController.buscarProdutosVenda)
 router.post('/vendas', vendasController.incluirVenda)
 router.put('/vendas', vendasController.editarVenda)
-router.delete('/vendas', vendasController.deletarVenda)
+router.delete('/vendas', vendasController.excluirVenda)
 
 // Login
 router.post('/usuarios', loginController.login)
